@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ロジポケ 共通ID管理 / ユーザー管理</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Meiryo', sans-serif; font-size: 14px; background: #f0f0eb; color: #1a1a1a; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ═══════════════ HEADER ═══════════════ */
+  .header { background: #1a3028; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; height: 52px; flex-shrink: 0; position: relative; z-index: 200; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo-wrap { display: flex; align-items: center; gap: 8px; }
+  .logo-icon { width: 30px; height: 30px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+  .logo-icon span { font-size: 16px; }
+  .logo-badge { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+  .header-company { font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 400; }
+  .header-right { display: flex; align-items: center; gap: 4px; }
+  .header-btn { background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; padding: 6px 10px; border-radius: 6px; font-size: 12px; display: flex; align-items: center; gap: 5px; transition: background 0.15s, color 0.15s; white-space: nowrap; font-family: inherit; }
+  .header-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .header-btn i { font-size: 16px; }
+  .header-btn.icon-only { padding: 6px 8px; }
+  .divider-h { width: 1px; height: 22px; background: rgba(255,255,255,0.2); margin: 0 4px; }
+  .user-label { font-size: 13px; color: rgba(255,255,255,0.85); }
+
+  /* ═══════════════ LAYOUT ═══════════════ */
+  .app-body { display: flex; flex: 1; overflow: hidden; }
+
+  /* ═══════════════ SIDEBAR ═══════════════ */
+  .sidebar { width: 220px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
+  .sidebar-logo { padding: 14px 16px 12px; border-bottom: 1px solid #f0f0f0; }
+  .sidebar-logo-text { font-size: 13px; font-weight: 700; color: #1a3028; display: flex; align-items: center; gap: 6px; }
+  .sidebar-logo-text i { font-size: 16px; color: #2e7d5a; }
+  .sidebar-subtitle { font-size: 11px; color: #999; margin-top: 3px; padding-left: 22px; }
+  .nav-section { padding: 10px 0 4px; }
+  .nav-section-label { font-size: 10px; font-weight: 700; color: #bbb; text-transform: uppercase; letter-spacing: 0.07em; padding: 0 16px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; color: #555; transition: all 0.12s; border-left: 2px solid transparent; text-decoration: none; }
+  .nav-item:hover { background: #f5f5f2; color: #1a1a1a; }
+  .nav-item.active { background: #e6f2ec; color: #1a6b3a; border-left-color: #2e7d5a; font-weight: 600; }
+  .nav-item i { font-size: 15px; flex-shrink: 0; }
+
+  /* ═══════════════ MAIN ═══════════════ */
+  .main { flex: 1; overflow-y: auto; background: #f0f0eb; }
+  .breadcrumb { padding: 10px 28px; font-size: 12px; color: #999; display: flex; align-items: center; gap: 6px; background: #f0f0eb; border-bottom: 1px solid #e5e5e0; }
+  .breadcrumb a { color: #2e7d5a; text-decoration: none; cursor: pointer; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb i { font-size: 12px; color: #ccc; }
+  .breadcrumb .current { color: #555; }
+
+  .content { padding: 24px 28px 60px; max-width: 1280px; }
+
+  /* ═══════════════ PAGE HEAD ═══════════════ */
+  .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 16px; flex-wrap: wrap; }
+  .page-title-wrap { display: flex; align-items: center; gap: 10px; }
+  .title-bar { width: 4px; height: 22px; background: #1a3028; border-radius: 2px; }
+  .page-title { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+
+  /* ═══════════════ BUTTONS ═══════════════ */
+  .btn-primary-green { background: #2e7d5a; color: #fff; border: none; border-radius: 6px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary-green:hover { background: #245f45; }
+  .btn-primary-green i { font-size: 15px; }
+  .btn-secondary { background: #fff; border: 1px solid #d5d5d5; color: #333; font-size: 13px; padding: 9px 16px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; font-weight: 500; transition: all 0.15s; white-space: nowrap; }
+  .btn-secondary:hover { background: #f5f5f2; border-color: #b5b5b5; }
+  .btn-secondary i { font-size: 14px; color: #555; }
+  .btn-danger-outline { background: #fff; color: #d9352e; border: 1px solid #f4cdc9; font-size: 13px; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .btn-danger-outline:hover { background: #fdeeec; border-color: #d9352e; }
+  .btn-row-edit { background: #fff; border: 1px solid #d5d5d5; color: #2e7d5a; font-size: 12px; padding: 5px 14px; border-radius: 5px; cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.15s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .btn-row-edit:hover { background: #e6f2ec; border-color: #2e7d5a; }
+  .btn-row-edit i { font-size: 13px; }
+
+  /* ═══════════════ ACTIONS ROW ═══════════════ */
+  .actions-row { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+
+  /* ═══════════════ FILTER CARD ═══════════════ */
+  .filter-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 8px; padding: 18px 20px 14px; margin-bottom: 16px; }
+  .filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 16px; }
+  @media (max-width: 1100px) { .filter-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) { .filter-grid { grid-template-columns: 1fr; } }
+  .filter-item { display: flex; flex-direction: column; gap: 5px; }
+  .filter-label { font-size: 12px; color: #555; font-weight: 500; }
+  .filter-input, .filter-select { width: 100%; border: 1px solid #d5d5d5; border-radius: 6px; padding: 8px 12px; font-size: 13px; font-family: inherit; color: #1a1a1a; background: #fff; transition: border-color 0.15s, box-shadow 0.15s; }
+  .filter-input::placeholder { color: #b5b5b5; }
+  .filter-input:focus, .filter-select:focus { outline: none; border-color: #2e7d5a; box-shadow: 0 0 0 3px rgba(46,125,90,0.12); }
+  .filter-select { padding-right: 30px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23888' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
+  .filter-footer { display: flex; justify-content: flex-end; margin-top: 12px; }
+  .btn-reset { background: #fff; border: 1px solid #d5d5d5; color: #555; font-size: 12px; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: inherit; transition: all 0.15s; font-weight: 500; }
+  .btn-reset:hover { background: #f5f5f2; border-color: #b5b5b5; }
+
+  /* ═══════════════ TABLE CARD ═══════════════ */
+  .table-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 8px; overflow: hidden; }
+  .user-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .user-table th { text-align: left; color: #666; font-weight: 600; font-size: 12px; padding: 12px 16px; border-bottom: 1px solid #ebebeb; background: #fafafa; white-space: nowrap; }
+  .user-table th.sortable { cursor: pointer; user-select: none; }
+  .user-table th.sortable:hover { color: #1a1a1a; }
+  .user-table th .sort-arrows { display: inline-flex; flex-direction: column; gap: 0; margin-left: 4px; vertical-align: middle; font-size: 8px; line-height: 1; color: #b5b5b5; }
+  .user-table td { padding: 13px 16px; border-bottom: 1px solid #ebebeb; color: #1a1a1a; vertical-align: middle; }
+  .user-table tr:last-child td { border-bottom: none; }
+  .user-table tbody tr { cursor: pointer; transition: background 0.1s; }
+  .user-table tbody tr:hover td { background: #f7faf8; }
+  .col-emp-no { width: 110px; font-family: 'Hiragino Sans', sans-serif; color: #1a1a1a; font-weight: 500; }
+  .col-name { width: 160px; }
+  .col-team { width: 180px; }
+  .col-emp-type { width: 120px; }
+  .col-role { min-width: 180px; }
+  .col-kei { width: 80px; text-align: center; }
+  .col-mfa { width: 80px; text-align: center; }
+  .col-status { width: 90px; }
+  .col-edit { width: 90px; text-align: center; }
+
+  /* ═══════════════ TAGS / BADGES ═══════════════ */
+  .role-tag { display: inline-flex; align-items: center; padding: 3px 10px; background: #f5f5f2; border: 1px solid #d5d5d5; color: #555; border-radius: 14px; font-size: 11px; font-weight: 500; line-height: 1.5; white-space: nowrap; margin-right: 4px; }
+  .role-tag-primary { background: #2e7d5a; color: #fff; border-color: #2e7d5a; }
+  .role-tag-blue { background: #e3f2fd; color: #1565c0; border-color: #bbdefb; }
+  .role-plus { display: inline-flex; align-items: center; padding: 3px 8px; background: transparent; color: #888; font-size: 11px; font-weight: 500; line-height: 1.5; }
+  .status-pill { display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 14px; font-size: 11px; font-weight: 700; line-height: 1.5; }
+  .status-pill.active { background: #2e7d5a; color: #fff; }
+  .status-pill.inactive { background: #fff; color: #b5b5b5; border: 1px solid #d5d5d5; }
+  .status-dash { color: #c5c5c5; font-size: 16px; }
+  .mfa-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; line-height: 1.5; }
+  .mfa-pill.required { background: #fff3e0; color: #b8651a; border: 1px solid #ffd699; }
+  .mfa-pill.exempt { background: #f5f5f2; color: #888; border: 1px solid #d5d5d5; }
+  .kei-pill { display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 14px; font-size: 11px; font-weight: 700; line-height: 1.5; background: #2e7d5a; color: #fff; }
+
+  /* ═══════════════ TOGGLE SWITCH ═══════════════ */
+  .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: #c5c5c5; border-radius: 22px; transition: background 0.18s; cursor: pointer; }
+  .toggle-slider::before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.18s; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+  .toggle-switch input:checked + .toggle-slider { background: #2e7d5a; }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+  /* ═══════════════ KEI-AN-KAN SECTION IN MODAL ═══════════════ */
+  .kei-section { border: 1px solid #e0e0d8; border-radius: 8px; padding: 14px 16px; margin-bottom: 18px; background: #fff; display: flex; align-items: flex-start; gap: 14px; }
+  .kei-section.is-on { border-color: #2e7d5a; background: #f7faf8; }
+  .kei-section-body { flex: 1; min-width: 0; }
+  .kei-section-title { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .kei-section-desc { font-size: 12px; color: #666; line-height: 1.6; }
+
+  /* ═══════════════ PAGINATION ═══════════════ */
+  .pagination-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #fafafa; border-top: 1px solid #ebebeb; font-size: 12px; color: #555; }
+  .pagination-info strong { color: #1a1a1a; }
+  .pagination-controls { display: flex; align-items: center; gap: 4px; }
+  .page-btn { min-width: 28px; height: 28px; border: 1px solid #d5d5d5; background: #fff; border-radius: 4px; cursor: pointer; font-size: 12px; color: #555; font-family: inherit; padding: 0 8px; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; }
+  .page-btn:hover:not(:disabled):not(.active) { background: #f5f5f2; border-color: #b5b5b5; }
+  .page-btn.active { background: #2e7d5a; border-color: #2e7d5a; color: #fff; cursor: default; font-weight: 600; }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .page-size-select { border: 1px solid #d5d5d5; border-radius: 4px; padding: 4px 24px 4px 8px; font-size: 12px; font-family: inherit; color: #1a1a1a; background: #fff; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath fill='%23888' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+
+  /* ═══════════════ DETAIL PAGE HEAD ═══════════════ */
+  .detail-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; gap: 16px; flex-wrap: wrap; }
+  .detail-title-block { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
+  .detail-name { font-size: 24px; font-weight: 700; color: #1a1a1a; line-height: 1.2; }
+  .detail-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .detail-id { font-size: 12px; color: #666; margin-right: 4px; }
+  .detail-id strong { color: #1a1a1a; font-weight: 600; }
+  .detail-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 14px; font-size: 11px; font-weight: 600; line-height: 1.5; background: #f5f5f2; border: 1px solid #d5d5d5; color: #555; }
+  .detail-badge.green { background: #2e7d5a; color: #fff; border-color: #2e7d5a; }
+  .detail-badge.outline { background: #fff; border: 1px solid #d5d5d5; color: #555; }
+  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ═══════════════ TABS ═══════════════ */
+  .detail-tabs { display: flex; gap: 0; border-bottom: 1px solid #d5d5d0; margin-bottom: 20px; flex-wrap: wrap; }
+  .detail-tab { padding: 10px 18px; font-size: 14px; color: #888; cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; font-weight: 500; transition: all 0.15s; margin-bottom: -1px; background: transparent; font-family: inherit; }
+  .detail-tab:hover { color: #1a1a1a; background: #f5f5f2; }
+  .detail-tab.active { color: #1a1a1a; font-weight: 700; background: #fff; border-color: #d5d5d0; border-bottom-color: #fff; cursor: default; }
+  .detail-tab.active:hover { background: #fff; }
+
+  /* ═══════════════ DETAIL CARDS ═══════════════ */
+  .detail-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 8px; padding: 20px 22px; margin-bottom: 16px; }
+  .detail-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .detail-card-title { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+  .detail-card-edit { background: #fff; border: 1px solid #d5d5d5; color: #555; font-size: 12px; padding: 5px 14px; border-radius: 5px; cursor: pointer; font-family: inherit; font-weight: 500; transition: all 0.15s; display: inline-flex; align-items: center; gap: 4px; }
+  .detail-card-edit:hover { background: #f5f5f2; border-color: #b5b5b5; }
+
+  .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 20px; }
+  @media (max-width: 900px) { .field-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .field-grid { grid-template-columns: 1fr; } }
+  .field-grid.two-col { grid-template-columns: repeat(2, 1fr); }
+  .field-grid.four-col { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 1100px) { .field-grid.four-col { grid-template-columns: repeat(2, 1fr); } }
+
+  .field-block { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .field-label { font-size: 12px; color: #666; font-weight: 500; }
+  .field-value { font-size: 14px; color: #1a1a1a; padding: 8px 0 0; word-break: break-all; }
+  .field-value.empty { color: #b5b5b5; }
+  .field-display { font-size: 13px; color: #888; padding: 9px 12px; background: #f5f5f2; border: 1px solid #ebebeb; border-radius: 6px; min-height: 38px; display: flex; align-items: center; word-break: break-all; }
+
+  /* ═══════════════ AFFILIATION TAB ═══════════════ */
+  .affil-list-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 8px; overflow: hidden; }
+  .affil-list-head { padding: 14px 20px; border-bottom: 1px solid #ebebeb; display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
+  .affil-list-title { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+  .affil-row { padding: 16px 20px; border-bottom: 1px solid #ebebeb; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .affil-row:last-child { border-bottom: none; }
+  .affil-row-left { flex: 1; min-width: 0; }
+  .affil-team-name { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .primary-mark { background: #2e7d5a; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; letter-spacing: 0.02em; }
+  .affil-role-row { display: flex; flex-wrap: wrap; gap: 5px; }
+
+  /* ═══════════════ MODAL ═══════════════ */
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: flex-start; justify-content: center; padding: 60px 20px 40px; overflow-y: auto; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: #fff; border-radius: 8px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); width: 100%; max-width: 540px; animation: modalIn 0.18s ease-out; }
+  .modal.modal-wide { max-width: 720px; }
+  .modal.modal-xwide { max-width: 880px; }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 16px; border-bottom: 1px solid #ebebeb; }
+  .modal-title { font-size: 17px; font-weight: 700; color: #1a1a1a; }
+  .modal-close { background: none; border: none; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #888; border-radius: 4px; font-size: 18px; font-family: inherit; }
+  .modal-close:hover { background: #f5f5f2; color: #333; }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 16px 24px 20px; border-top: 1px solid #ebebeb; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group:last-child { margin-bottom: 0; }
+  .form-label { display: block; font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 6px; }
+  .required-mark { color: #e53935; margin-left: 2px; font-weight: 700; }
+  .form-input, .form-select { width: 100%; border: 1px solid #d5d5d5; border-radius: 6px; padding: 9px 12px; font-size: 13px; font-family: inherit; color: #1a1a1a; background: #fff; transition: border-color 0.15s, box-shadow 0.15s; }
+  .form-input:focus, .form-select:focus { outline: none; border-color: #2e7d5a; box-shadow: 0 0 0 3px rgba(46,125,90,0.12); }
+  .form-input::placeholder { color: #b5b5b5; }
+  .form-select { padding-right: 30px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23888' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
+
+  .btn-modal-primary { background: #2e7d5a; color: #fff; border: none; border-radius: 6px; padding: 9px 22px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+  .btn-modal-primary:hover { background: #245f45; }
+  .btn-modal-primary:disabled { background: #c5c5c5; cursor: not-allowed; }
+  .btn-modal-cancel { background: #fff; color: #555; border: 1px solid #d5d5d5; border-radius: 6px; padding: 9px 22px; font-size: 13px; cursor: pointer; font-family: inherit; transition: background 0.15s; font-weight: 500; }
+  .btn-modal-cancel:hover { background: #f5f5f2; }
+  .btn-modal-danger { background: #d9352e; color: #fff; border: none; border-radius: 6px; padding: 9px 22px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+  .btn-modal-danger:hover { background: #b62a24; }
+
+  /* ═══════════════ EDIT MODAL: USER CARD ═══════════════ */
+  .modal-user-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #f7faf8; border: 1px solid #d5e8de; border-radius: 8px; margin-bottom: 18px; }
+  .modal-user-avatar { width: 44px; height: 44px; border-radius: 50%; background: #2e7d5a; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; flex-shrink: 0; }
+  .modal-user-info { flex: 1; min-width: 0; }
+  .modal-user-info .name { font-weight: 700; font-size: 15px; color: #1a1a1a; }
+  .modal-user-info .meta { font-size: 12px; color: #666; margin-top: 3px; }
+
+  /* ═══════════════ EDIT MODAL: TEAM/ROLE BLOCK ═══════════════ */
+  .edit-section-label { font-size: 13px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .edit-section-hint { font-size: 12px; color: #888; margin-bottom: 12px; line-height: 1.6; }
+  .edit-section-hint .ki-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; background: #555; color: #fff; vertical-align: middle; margin: 0 3px; }
+
+  .team-block { border: 1px solid #e0e0d8; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; background: #fff; transition: border-color 0.15s, box-shadow 0.15s; }
+  .team-block.is-primary { border-color: #2e7d5a; background: #f7faf8; box-shadow: 0 0 0 3px rgba(46,125,90,0.08); }
+  .team-block-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .primary-radio { width: 18px; height: 18px; cursor: pointer; accent-color: #2e7d5a; flex-shrink: 0; }
+  .team-block-name { font-size: 14px; font-weight: 600; color: #1a1a1a; flex: 1; }
+  .primary-flag { background: #2e7d5a; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; }
+  .team-remove-btn { background: #fff; border: 1px solid #ebebeb; color: #888; width: 26px; height: 26px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; transition: all 0.12s; font-family: inherit; }
+  .team-remove-btn:hover { border-color: #d9352e; color: #d9352e; background: #fdeeec; }
+  .team-remove-btn i { font-size: 14px; }
+
+  .role-chip-area { border: 1px solid #d5d5d5; border-radius: 6px; padding: 7px 10px 4px; background: #fff; min-height: 40px; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; cursor: text; }
+  .role-chip-area:focus-within { border-color: #2e7d5a; box-shadow: 0 0 0 3px rgba(46,125,90,0.12); }
+  .role-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 6px 3px 10px; background: #f0f0eb; border: 1px solid #d5d5d5; border-radius: 4px; font-size: 12px; color: #1a1a1a; margin-bottom: 3px; }
+  .role-chip-x { background: none; border: none; color: #888; cursor: pointer; padding: 0; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; border-radius: 2px; font-size: 12px; font-family: inherit; }
+  .role-chip-x:hover { background: #d9352e; color: #fff; }
+  .role-chip-input { flex: 1; min-width: 80px; border: none; outline: none; font-family: inherit; font-size: 12px; padding: 4px 2px; background: transparent; }
+  .role-dropdown { position: relative; }
+  .role-dropdown-menu { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #d5d5d5; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); z-index: 10; padding: 4px 0; max-height: 240px; overflow-y: auto; }
+  .role-dropdown.open .role-dropdown-menu { display: block; }
+  .role-dropdown-item { padding: 8px 14px; font-size: 13px; color: #1a1a1a; cursor: pointer; transition: background 0.1s; display: flex; align-items: center; justify-content: space-between; }
+  .role-dropdown-item:hover { background: #f5f5f2; }
+  .role-dropdown-item.selected { color: #2e7d5a; font-weight: 600; }
+  .role-dropdown-item.selected::after { content: '✓'; color: #2e7d5a; font-weight: 700; }
+
+  .btn-add-team { width: 100%; border: 1px dashed #b5b5b5; background: #fafafa; color: #2e7d5a; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px; }
+  .btn-add-team:hover { border-color: #2e7d5a; background: #f0f7f3; }
+  .btn-add-team i { font-size: 14px; }
+
+  /* ═══════════════ ALERT BOX ═══════════════ */
+  .alert-warn { background: #fff8e1; border: 1px solid #ffe082; border-left: 3px solid #f5b800; border-radius: 6px; padding: 12px 14px; font-size: 13px; color: #5d4d00; line-height: 1.6; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 8px; }
+  .alert-warn i { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .alert-danger { background: #fdeeec; border: 1px solid #f4cdc9; border-left: 3px solid #d9352e; border-radius: 6px; padding: 12px 14px; font-size: 13px; color: #7a1f1a; line-height: 1.6; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 8px; }
+  .alert-danger i { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .target-user-summary { background: #fafafa; border: 1px solid #ebebeb; border-radius: 6px; padding: 12px 14px; margin-bottom: 16px; }
+  .target-user-summary .name { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+  .target-user-summary .meta { font-size: 12px; color: #666; }
+
+  /* ═══════════════ LOG TABLES ═══════════════ */
+  .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .log-table th { text-align: left; color: #666; font-weight: 600; font-size: 12px; padding: 12px 16px; border-bottom: 1px solid #ebebeb; background: #fafafa; white-space: nowrap; }
+  .log-table td { padding: 11px 16px; border-bottom: 1px solid #ebebeb; color: #1a1a1a; vertical-align: middle; }
+  .log-table tr:last-child td { border-bottom: none; }
+  .log-table .log-time { color: #666; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .log-result { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; }
+  .log-result.success { background: #e6f2ec; color: #1a6b3a; }
+  .log-result.failure { background: #fdeeec; color: #c02a26; }
+
+  /* ═══════════════ TOAST ═══════════════ */
+  .toast { display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a3028; color: #fff; padding: 12px 20px; border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,0.25); font-size: 13px; font-weight: 500; align-items: center; gap: 8px; z-index: 2000; min-width: 240px; }
+  .toast i { font-size: 16px; }
+
+  /* ═══════════════ CSV IMPORT MODAL ═══════════════ */
+  .import-desc { font-size: 13px; color: #333; line-height: 1.75; margin-bottom: 14px; }
+  .alert-numbered { background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 14px 18px; font-size: 13px; color: #5d4d00; margin-bottom: 16px; line-height: 1.8; }
+  .alert-numbered ol { padding-left: 22px; margin: 0; }
+  .alert-numbered ol li { margin-bottom: 2px; }
+  .alert-numbered ol li:last-child { margin-bottom: 0; }
+
+  .help-link-row { font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .help-icon-small { width: 16px; height: 16px; border: 1.5px solid #2196f3; color: #2196f3; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; line-height: 1; }
+  .help-link { color: #2196f3; text-decoration: none; font-size: 13px; }
+  .help-link:hover { text-decoration: underline; }
+
+  .sample-row { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  .btn-sample-dl { background: #2196f3; color: #fff; border: none; border-radius: 6px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-sample-dl:hover { background: #1976d2; }
+  .btn-sample-dl i { font-size: 14px; }
+
+  .dropzone { border: 1.5px dashed #c5c5c5; border-radius: 6px; background: #fafafa; padding: 28px 18px 0; text-align: center; transition: all 0.15s; cursor: pointer; overflow: hidden; margin-bottom: 14px; }
+  .dropzone:hover { border-color: #2196f3; background: #f4f9ff; }
+  .dropzone.dragover { border-color: #2196f3; background: #e3f2fd; border-style: solid; }
+  .dropzone-text { font-size: 13px; color: #777; margin-bottom: 14px; }
+  .dropzone-icon { font-size: 56px; color: #b5b5b5; line-height: 1; margin-bottom: 12px; }
+  .dropzone-icon i { font-size: inherit; }
+  .dropzone-btn { background: #ebebeb; border: none; color: #555; padding: 12px; font-size: 13px; cursor: pointer; font-family: inherit; width: calc(100% + 36px); margin: 14px -18px 0; transition: background 0.15s; }
+  .dropzone-btn:hover { background: #e0e0e0; }
+  .dropzone-file { font-size: 13px; color: #2e7d5a; font-weight: 600; padding: 6px 12px; background: #e6f2ec; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; margin: 4px auto 12px; }
+  .dropzone-file i { font-size: 14px; }
+  .charset-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #1a1a1a; cursor: pointer; }
+  .charset-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #2196f3; margin: 0; }
+
+  .btn-modal-blue { background: #2196f3; color: #fff; border: none; border-radius: 6px; padding: 9px 22px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+  .btn-modal-blue:hover { background: #1976d2; }
+  .btn-modal-blue:disabled { background: #c5c5c5; cursor: not-allowed; }
+
+  .export-note { font-size: 13px; color: #666; margin-bottom: 16px; line-height: 1.6; }
+
+  /* ═══════════════ PROGRESS CARD (右下フローティング) ═══════════════ */
+  .progress-card { display: none; position: fixed; bottom: 24px; right: 24px; background: #fff; border: 1px solid #d5d5d5; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.06); width: 340px; padding: 14px 16px; z-index: 1500; }
+  .progress-card.open { display: block; animation: progressIn 0.22s ease-out; }
+  @keyframes progressIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .progress-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .progress-spinner { width: 14px; height: 14px; border: 2px solid #e0e0e0; border-top-color: #2e7d5a; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .progress-title { font-size: 13px; font-weight: 700; color: #1a1a1a; flex: 1; }
+  .progress-percent { font-size: 12px; color: #555; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .progress-bar-bg { height: 6px; background: #f0f0eb; border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+  .progress-bar-fill { height: 100%; background: #2e7d5a; border-radius: 3px; transition: width 0.25s ease; width: 0%; }
+  .progress-detail { font-size: 11px; color: #888; line-height: 1.5; min-height: 16px; }
+  .progress-card.is-complete .progress-spinner { display: none; }
+  .progress-card.is-complete .progress-head::before { content: '\2713'; color: #2e7d5a; font-weight: 700; font-size: 16px; }
+  .progress-card.is-complete .progress-bar-fill { background: #2e7d5a; }
+
+  /* ═══════════════ SCROLLBAR ═══════════════ */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 3px; }
+
+  /* ═══════════════ VIEW TOGGLE ═══════════════ */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ═══════ HEADER ═══════ -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-wrap">
+      <div class="logo-icon"><span>🚚</span></div>
+      <span class="logo-badge">ロジポケ</span>
+    </div>
+    <span class="header-company">ロジポケホールディングス【セールス用】 様</span>
+  </div>
+  <div class="header-right">
+    <button class="header-btn"><i class="ti ti-grid-dots"></i>ロジポケシリーズ<i class="ti ti-chevron-down"></i></button>
+    <div class="divider-h"></div>
+    <span class="user-label">諏訪 尚杜（システム管理者）</span>
+    <div class="divider-h"></div>
+    <button class="header-btn icon-only" title="履歴"><i class="ti ti-history"></i></button>
+    <button class="header-btn icon-only" title="アカウント"><i class="ti ti-user-circle"></i></button>
+  </div>
+</header>
+
+<!-- ═══════ APP BODY ═══════ -->
+<div class="app-body">
+
+  <!-- sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text"><i class="ti ti-building"></i>ロジポケ 共通管理</div>
+      <div class="sidebar-subtitle">ID管理基盤</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">ホーム</div>
+      <a class="nav-item" href="index.html"><i class="ti ti-home"></i>サービス一覧</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">設定</div>
+      <a class="nav-item active" href="users.html"><i class="ti ti-users"></i>ユーザー管理</a>
+      <a class="nav-item" href="organizations.html"><i class="ti ti-sitemap"></i>組織図管理</a>
+      <a class="nav-item" href="#"><i class="ti ti-shield-lock"></i>権限パターン設定</a>
+      <a class="nav-item" href="#"><i class="ti ti-key"></i>SSO設定</a>
+      <a class="nav-item" href="#"><i class="ti ti-apps"></i>サービス連携</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">ログ</div>
+      <a class="nav-item" href="#"><i class="ti ti-history"></i>ログイン履歴</a>
+      <a class="nav-item" href="#"><i class="ti ti-file-text"></i>操作ログ</a>
+    </div>
+  </nav>
+
+  <!-- main -->
+  <main class="main">
+    <div class="breadcrumb" id="breadcrumb">
+      <a href="#" onclick="goToList(event)">共通管理</a>
+      <i class="ti ti-chevron-right"></i>
+      <span class="current" id="bcCurrent">ユーザー管理</span>
+    </div>
+
+    <div class="content">
+
+      <!-- ═══════ VIEW: ユーザー一覧 ═══════ -->
+      <section class="view active" id="viewList">
+        <div class="page-head">
+          <div class="page-title-wrap">
+            <div class="title-bar"></div>
+            <h1 class="page-title">ユーザー管理</h1>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-row">
+          <button class="btn-primary-green" onclick="openModal('modalCreate')"><i class="ti ti-plus"></i>新規登録</button>
+          <button class="btn-secondary" onclick="openImportModal()"><i class="ti ti-file-import"></i>CSVインポート</button>
+          <button class="btn-secondary" onclick="openExportModal()"><i class="ti ti-file-export"></i>CSVエクスポート</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-card">
+          <div class="filter-grid">
+            <div class="filter-item">
+              <label class="filter-label">キーワード</label>
+              <input type="text" class="filter-input" id="fKeyword" placeholder="氏名・ログインID・メール" oninput="filterUsers()">
+            </div>
+            <div class="filter-item">
+              <label class="filter-label">所属チーム</label>
+              <select class="filter-select" id="fTeam" onchange="filterUsers()">
+                <option value="">すべて</option>
+                <option>コーポレート本部</option>
+                <option>人事部</option>
+                <option>監査役</option>
+                <option>M&amp;A事業本部</option>
+                <option>営業本部</option>
+                <option>開発本部</option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <label class="filter-label">ロール</label>
+              <select class="filter-select" id="fRole" onchange="filterUsers()">
+                <option value="">すべて</option>
+                <option>CXO</option>
+                <option>GM</option>
+                <option>Manager</option>
+                <option>Sub Manager</option>
+                <option>Leader</option>
+                <option>Sub Leader</option>
+                <option>Member</option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <label class="filter-label">状態</label>
+              <select class="filter-select" id="fStatus" onchange="filterUsers()">
+                <option value="active">有効</option>
+                <option value="inactive">無効化</option>
+                <option value="">すべて</option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <label class="filter-label">MFA</label>
+              <select class="filter-select" id="fMfa" onchange="filterUsers()">
+                <option value="">すべて</option>
+                <option value="required">必須</option>
+                <option value="exempt">免除</option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <label class="filter-label">雇用形態</label>
+              <select class="filter-select" id="fEmpType" onchange="filterUsers()">
+                <option value="">すべて</option>
+                <option>正社員</option>
+                <option>契約社員</option>
+                <option>パート・アルバイト</option>
+                <option>業務委託</option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <label class="filter-label">軽安管</label>
+              <select class="filter-select" id="fKei" onchange="filterUsers()">
+                <option value="">すべて</option>
+                <option value="on">対象</option>
+                <option value="off">対象外</option>
+              </select>
+            </div>
+          </div>
+          <div class="filter-footer">
+            <button class="btn-reset" onclick="resetFilters()">条件をリセット</button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+          <table class="user-table">
+            <thead>
+              <tr>
+                <th class="col-emp-no">ログインID</th>
+                <th class="col-name">氏名</th>
+                <th class="col-team">所属チーム（主務）</th>
+                <th class="col-emp-type">雇用形態</th>
+                <th class="col-role">ロール</th>
+                <th class="col-kei">軽安管</th>
+                <th class="col-mfa">MFA</th>
+                <th class="col-status">状態</th>
+                <th class="col-edit">編集</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <!-- rows populated by JS -->
+            </tbody>
+          </table>
+          <div class="pagination-bar">
+            <div class="pagination-info">全 <strong id="totalCount">12</strong> 件中 <strong id="showCount">1〜12</strong> 件を表示</div>
+            <div class="pagination-controls">
+              <button class="page-btn" disabled><i class="ti ti-chevron-left"></i></button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn" disabled><i class="ti ti-chevron-right"></i></button>
+              <select class="page-size-select">
+                <option>20件</option>
+                <option>50件</option>
+                <option>100件</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════ VIEW: ユーザー詳細 ═══════ -->
+      <section class="view" id="viewDetail">
+        <!-- Detail head -->
+        <div class="detail-head">
+          <div class="detail-title-block">
+            <h1 class="detail-name" id="dName">—</h1>
+            <div class="detail-badges">
+              <span class="detail-id">ログインID: <strong id="dLoginId">—</strong></span>
+              <span class="detail-badge green" id="dStatusBadge">有効</span>
+              <span class="detail-badge outline" id="dRoleBadge1">—</span>
+              <span class="detail-badge outline" id="dRoleBadge2" style="display:none;">—</span>
+              <span class="detail-badge green" id="dKeiBadge" style="display:none;">軽安管 対象</span>
+              <span class="detail-badge outline" id="dMfaBadge">MFA: 必須</span>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <button class="btn-secondary"><i class="ti ti-history"></i>操作ログを見る</button>
+            <button class="btn-danger-outline" id="dDeactivateBtn" onclick="openModal('modalDeactivate')">無効化</button>
+            <button class="btn-secondary" onclick="openModal('modalResetPw')"><i class="ti ti-key"></i>パスワードリセット</button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="detail-tabs">
+          <button class="detail-tab active" data-tab="basic" onclick="switchTab('basic')">基本情報</button>
+          <button class="detail-tab" data-tab="affil" onclick="switchTab('affil')">所属・権限</button>
+          <button class="detail-tab" data-tab="login" onclick="switchTab('login')">ログイン履歴</button>
+          <button class="detail-tab" data-tab="ops" onclick="switchTab('ops')">操作ログ</button>
+        </div>
+
+        <!-- Tab: 基本情報 -->
+        <div class="tab-pane active" id="tab-basic">
+          <!-- アカウント情報 -->
+          <div class="detail-card">
+            <div class="detail-card-head">
+              <h2 class="detail-card-title">アカウント情報</h2>
+            </div>
+            <div class="field-grid">
+              <div class="field-block">
+                <span class="field-label">ログインID</span>
+                <div class="field-display" id="fAccLoginId">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">メールアドレス</span>
+                <div class="field-display" id="fAccMail">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">ロール</span>
+                <div class="field-display" id="fAccRole">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">MFA</span>
+                <div class="field-display" id="fAccMfa">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">状態</span>
+                <div class="field-display" id="fAccStatus">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">最終ログイン</span>
+                <div class="field-display" id="fAccLastLogin">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 従業員情報 -->
+          <div class="detail-card">
+            <div class="detail-card-head">
+              <h2 class="detail-card-title">従業員情報</h2>
+              <button class="detail-card-edit" onclick="openModal('modalEditBasic')"><i class="ti ti-pencil"></i>編集</button>
+            </div>
+            <div class="field-grid">
+              <div class="field-block">
+                <span class="field-label">所属チーム（主務）</span>
+                <div class="field-display" id="fEmpTeam">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">社員番号</span>
+                <div class="field-display" id="fEmpNo">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">雇用形態</span>
+                <div class="field-display" id="fEmpType">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">姓</span>
+                <div class="field-display" id="fEmpSei">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">名</span>
+                <div class="field-display" id="fEmpMei">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">姓（カナ）</span>
+                <div class="field-display" id="fEmpSeiKana">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">名（カナ）</span>
+                <div class="field-display" id="fEmpMeiKana">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">性別</span>
+                <div class="field-display" id="fEmpGender">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">生年月日</span>
+                <div class="field-display" id="fEmpBirth">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">入社日</span>
+                <div class="field-display" id="fEmpJoin">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">会社電話</span>
+                <div class="field-display" id="fEmpPhoneOffice">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">個人電話</span>
+                <div class="field-display" id="fEmpPhonePersonal">—</div>
+              </div>
+              <div class="field-block">
+                <span class="field-label">軽安管 <span style="font-size:10px; color:#999;">（軽自動車安全運転管理者）</span></span>
+                <div class="field-display" id="fEmpKei">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: 所属・権限 -->
+        <div class="tab-pane" id="tab-affil">
+          <div class="alert-warn">
+            <i class="ti ti-info-circle"></i>
+            <div>所属チームと役職は <strong>組織図管理</strong> で定義されたものを使用しています。チーム・役職の追加や名称変更は組織図管理から行ってください。</div>
+          </div>
+          <div class="affil-list-card">
+            <div class="affil-list-head">
+              <span class="affil-list-title">所属チーム・役職一覧</span>
+              <button class="btn-row-edit" onclick="openEditModalForCurrent()"><i class="ti ti-pencil"></i>編集</button>
+            </div>
+            <div id="affilDetailList">
+              <!-- rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: ログイン履歴 -->
+        <div class="tab-pane" id="tab-login">
+          <div class="detail-card" style="padding: 0; overflow: hidden;">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th style="width: 200px;">日時</th>
+                  <th style="width: 120px;">結果</th>
+                  <th style="width: 160px;">IPアドレス</th>
+                  <th>デバイス / ブラウザ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="log-time">2026/05/14 09:12:34</td>
+                  <td><span class="log-result success">成功</span></td>
+                  <td>192.168.1.42</td>
+                  <td>macOS / Chrome 124</td>
+                </tr>
+                <tr>
+                  <td class="log-time">2026/05/13 18:45:02</td>
+                  <td><span class="log-result success">成功</span></td>
+                  <td>192.168.1.42</td>
+                  <td>macOS / Chrome 124</td>
+                </tr>
+                <tr>
+                  <td class="log-time">2026/05/13 09:03:18</td>
+                  <td><span class="log-result success">成功</span></td>
+                  <td>192.168.1.42</td>
+                  <td>macOS / Chrome 124</td>
+                </tr>
+                <tr>
+                  <td class="log-time">2026/05/12 22:11:55</td>
+                  <td><span class="log-result failure">MFA失敗</span></td>
+                  <td>203.0.113.7</td>
+                  <td>iOS / Safari</td>
+                </tr>
+                <tr>
+                  <td class="log-time">2026/05/12 09:08:12</td>
+                  <td><span class="log-result success">成功</span></td>
+                  <td>192.168.1.42</td>
+                  <td>macOS / Chrome 124</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab: 操作ログ -->
+        <div class="tab-pane" id="tab-ops">
+          <div class="detail-card" style="padding: 0; overflow: hidden;">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th style="width: 200px;">日時</th>
+                  <th style="width: 200px;">操作</th>
+                  <th>対象</th>
+                  <th style="width: 160px;">実行元IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="log-time">2026/05/14 10:34:21</td>
+                  <td>所属チーム・役職を更新</td>
+                  <td>監査役 → GM 追加</td>
+                  <td>192.168.1.42</td>
+                </tr>
+                <tr>
+                  <td class="log-time">2026/05/10 14:22:08</td>
+                  <td>ユーザー編集</td>
+                  <td>個人電話1 変更</td>
+                  <td>192.168.1.42</td>
+                </tr>
+                <tr>
+                  <td class="log-time">2026/04/28 11:05:44</td>
+                  <td>パスワード変更</td>
+                  <td>自身のパスワード</td>
+                  <td>192.168.1.42</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ═══════ MODAL: 所属チーム・役職 + 軽安管 編集 ═══════ -->
+<div class="modal-backdrop" id="modalEditAffil">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title">ユーザー設定を編集</div>
+      <button class="modal-close" onclick="closeModal('modalEditAffil')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- target user -->
+      <div class="modal-user-card">
+        <div class="modal-user-avatar" id="editAvatar">—</div>
+        <div class="modal-user-info">
+          <div class="name" id="editUserName">—</div>
+          <div class="meta" id="editUserMeta">—</div>
+        </div>
+      </div>
+
+      <!-- 軽安管 -->
+      <div class="edit-section-label">
+        <i class="ti ti-shield-check"></i>軽安管（軽自動車安全運転管理者）
+      </div>
+      <div class="kei-section" id="keiSection">
+        <label class="toggle-switch">
+          <input type="checkbox" id="editKei" onchange="onKeiToggle()">
+          <span class="toggle-slider"></span>
+        </label>
+        <div class="kei-section-body">
+          <div class="kei-section-title">軽自動車安全運転管理者として指定する</div>
+          <div class="kei-section-desc">
+            軽貨物事業所において、安全運転管理者業務を担うユーザーに設定します。事業所単位で1名以上の選任が必要です。
+          </div>
+        </div>
+      </div>
+
+      <!-- 所属チーム・役職 -->
+      <div class="edit-section-label">
+        <i class="ti ti-users-group"></i>所属チーム・役職
+      </div>
+      <div class="edit-section-hint">
+        所属するチームと、そのチームでの役職を設定します。複数のチームに所属する場合は <span class="ki-badge">主務</span> を1つ選択してください。<br>
+        チーム・役職の選択肢は <a href="#" style="color:#2e7d5a; font-weight:600;">組織図管理</a> で定義された値が表示されます。
+      </div>
+
+      <div id="teamBlocks">
+        <!-- team blocks rendered by JS -->
+      </div>
+
+      <button class="btn-add-team" onclick="addTeamBlock()"><i class="ti ti-plus"></i>所属チームを追加</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('modalEditAffil')">キャンセル</button>
+      <button class="btn-modal-primary" onclick="saveAffil()">変更を保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: 基本情報 編集 ═══════ -->
+<div class="modal-backdrop" id="modalEditBasic">
+  <div class="modal modal-xwide">
+    <div class="modal-header">
+      <div class="modal-title">従業員情報を編集</div>
+      <button class="modal-close" onclick="closeModal('modalEditBasic')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-grid">
+        <div class="form-group">
+          <label class="form-label">社員番号<span class="required-mark">*</span></label>
+          <input type="text" class="form-input" id="eEmpNo" placeholder="A001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">雇用形態</label>
+          <select class="form-select" id="eEmpType">
+            <option>正社員</option>
+            <option>契約社員</option>
+            <option>パート・アルバイト</option>
+            <option>業務委託</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">メールアドレス<span class="required-mark">*</span></label>
+          <input type="email" class="form-input" id="eMail">
+        </div>
+        <div class="form-group">
+          <label class="form-label">姓<span class="required-mark">*</span></label>
+          <input type="text" class="form-input" id="eSei">
+        </div>
+        <div class="form-group">
+          <label class="form-label">名<span class="required-mark">*</span></label>
+          <input type="text" class="form-input" id="eMei">
+        </div>
+        <div class="form-group">
+          <label class="form-label">姓（カナ）</label>
+          <input type="text" class="form-input" id="eSeiKana">
+        </div>
+        <div class="form-group">
+          <label class="form-label">名（カナ）</label>
+          <input type="text" class="form-input" id="eMeiKana">
+        </div>
+        <div class="form-group">
+          <label class="form-label">性別</label>
+          <select class="form-select" id="eGender">
+            <option>未選択</option>
+            <option>男性</option>
+            <option>女性</option>
+            <option>その他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">生年月日</label>
+          <input type="date" class="form-input" id="eBirth">
+        </div>
+        <div class="form-group">
+          <label class="form-label">入社日</label>
+          <input type="date" class="form-input" id="eJoin">
+        </div>
+        <div class="form-group">
+          <label class="form-label">会社電話</label>
+          <input type="text" class="form-input" id="ePhoneOffice" placeholder="03-0000-0001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">個人電話</label>
+          <input type="text" class="form-input" id="ePhonePersonal" placeholder="090-0000-0001">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('modalEditBasic')">キャンセル</button>
+      <button class="btn-modal-primary" onclick="saveBasic()">変更を保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: 新規登録 ═══════ -->
+<div class="modal-backdrop" id="modalCreate">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title">ユーザーを新規登録</div>
+      <button class="modal-close" onclick="closeModal('modalCreate')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert-warn">
+        <i class="ti ti-mail"></i>
+        <div>登録後、指定したメールアドレス宛に初期パスワードの設定リンクが送信されます。</div>
+      </div>
+      <div class="field-grid two-col">
+        <div class="form-group">
+          <label class="form-label">ログインID<span class="required-mark">*</span></label>
+          <input type="text" class="form-input" placeholder="例：tanaka.taro">
+        </div>
+        <div class="form-group">
+          <label class="form-label">社員番号<span class="required-mark">*</span></label>
+          <input type="text" class="form-input" placeholder="例：A013">
+        </div>
+        <div class="form-group">
+          <label class="form-label">姓<span class="required-mark">*</span></label>
+          <input type="text" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">名<span class="required-mark">*</span></label>
+          <input type="text" class="form-input">
+        </div>
+        <div class="form-group" style="grid-column: span 2;">
+          <label class="form-label">メールアドレス<span class="required-mark">*</span></label>
+          <input type="email" class="form-input" placeholder="例：tanaka.taro@logipoke.co.jp">
+        </div>
+        <div class="form-group">
+          <label class="form-label">所属チーム（主務）<span class="required-mark">*</span></label>
+          <select class="form-select">
+            <option>選択してください</option>
+            <option>コーポレート本部</option>
+            <option>人事部</option>
+            <option>監査役</option>
+            <option>M&amp;A事業本部</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">役職</label>
+          <select class="form-select">
+            <option>選択してください</option>
+            <option>CXO</option>
+            <option>GM</option>
+            <option>Manager</option>
+            <option>Sub Manager</option>
+            <option>Leader</option>
+            <option>Sub Leader</option>
+            <option>Member</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('modalCreate')">キャンセル</button>
+      <button class="btn-modal-primary" onclick="createUser()">登録して招待メールを送信</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: 無効化 確認 ═══════ -->
+<div class="modal-backdrop" id="modalDeactivate">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="deactivateTitle">ユーザーを無効化</div>
+      <button class="modal-close" onclick="closeModal('modalDeactivate')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert-danger" id="deactivateAlert">
+        <i class="ti ti-alert-triangle"></i>
+        <div>このユーザーは <strong>ログイン不可</strong> になります。連携サービスへのアクセスもブロックされます。</div>
+      </div>
+      <div class="target-user-summary">
+        <div class="name" id="deactivateName">—</div>
+        <div class="meta" id="deactivateMeta">—</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('modalDeactivate')">キャンセル</button>
+      <button class="btn-modal-danger" id="deactivateConfirm" onclick="toggleDeactivate()">無効化する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: パスワードリセット 確認 ═══════ -->
+<div class="modal-backdrop" id="modalResetPw">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">パスワードをリセット</div>
+      <button class="modal-close" onclick="closeModal('modalResetPw')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert-warn">
+        <i class="ti ti-mail-forward"></i>
+        <div>このユーザーのメールアドレス宛に <strong>パスワード再設定リンク</strong> を送信します。リンクの有効期限は24時間です。</div>
+      </div>
+      <div class="target-user-summary">
+        <div class="name" id="resetName">—</div>
+        <div class="meta" id="resetMeta">—</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('modalResetPw')">キャンセル</button>
+      <button class="btn-modal-primary" onclick="resetPassword()">リセットメールを送信</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: CSVインポート ═══════ -->
+<div class="modal-backdrop" id="modalImport">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title">CSVインポート</div>
+      <button class="modal-close" onclick="closeModal('modalImport')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="import-desc">
+        サンプルをダウンロードして編集、もしくはCSVダウンロードで取得したファイルを編集してアップロードしてください。<br>
+        IDが空欄のユーザーは新規登録し、空欄でない場合は更新します。
+      </p>
+      <div class="alert-numbered">
+        <ol>
+          <li>一度登録したユーザーは削除できません。</li>
+          <li>CSV形式が古いと取り込めない場合があります。最新のサンプルCSVをダウンロードしてお試しください。</li>
+        </ol>
+      </div>
+      <div class="help-link-row">
+        <span class="help-icon-small">?</span>
+        <a href="#" class="help-link">ユーザーCSVインポートのよくある質問を見る</a>
+      </div>
+      <div class="sample-row">
+        <button class="btn-sample-dl" onclick="downloadSample()">サンプルダウンロード</button>
+      </div>
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+        <div class="dropzone-text">ファイルを選択するか、ドラッグアンドドロップしてください。</div>
+        <div class="dropzone-icon"><i class="ti ti-cloud-upload"></i></div>
+        <div id="dropzoneFile"></div>
+        <input type="file" id="fileInput" accept=".csv,text/csv" style="display:none" onchange="handleFile(event)">
+        <button class="dropzone-btn" type="button" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">ファイルを選択</button>
+      </div>
+      <label class="charset-row" for="charsetCheck">
+        <input type="checkbox" id="charsetCheck">
+        <span>文字コード：Shift-JIS</span>
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('modalImport')">キャンセル</button>
+      <button class="btn-modal-blue" id="uploadBtn" disabled onclick="submitImport()">アップロード</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: CSVダウンロード ═══════ -->
+<div class="modal-backdrop" id="modalExport">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">CSVダウンロード</div>
+      <button class="modal-close" onclick="closeModal('modalExport')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="export-note">※ 検索フィルターはダウンロードデータには反映されません。</p>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" style="font-weight: 500;">文字コード</label>
+        <select class="form-select" id="exportCharset">
+          <option value="utf8bom">エクセル対応（UTF-8 BOM）</option>
+          <option value="utf8">UTF-8</option>
+          <option value="sjis">Shift-JIS</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('modalExport')">キャンセル</button>
+      <button class="btn-modal-blue" onclick="submitExport()">CSVダウンロード</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PROGRESS CARD (右下フローティング) ═══════ -->
+<div class="progress-card" id="progressCard">
+  <div class="progress-head">
+    <div class="progress-spinner" id="progressSpinner"></div>
+    <div class="progress-title" id="progressTitle">処理中...</div>
+    <span class="progress-percent" id="progressPercent">0%</span>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressFill"></div>
+  </div>
+  <div class="progress-detail" id="progressDetail">準備中...</div>
+</div>
+
+<!-- ═══════ TOAST ═══════ -->
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ═══════════════════════════════════════════════════════════════
+     データ：チーム・役職（組織図管理で定義された値を想定）
+     ═══════════════════════════════════════════════════════════════ */
+  const TEAMS = [
+    'コーポレート本部',
+    '人事部',
+    '監査役',
+    'M&A事業本部',
+    '営業本部',
+    '営業本部 / 関東支社',
+    '営業本部 / 関西支社',
+    '開発本部',
+    '開発本部 / プロダクト開発部',
+    '開発本部 / インフラ部',
+  ];
+  const ROLES = ['CXO', 'GM', 'Manager', 'Sub Manager', 'Leader', 'Sub Leader', 'Member'];
+
+  /* ═══════════════════════════════════════════════════════════════
+     データ：ユーザー一覧（サンプル）
+     ═══════════════════════════════════════════════════════════════ */
+  const USERS = [
+    {
+      id: 'U001',
+      loginId: 'suwa.naoto',
+      empNo: 'A001',
+      sei: '諏訪', mei: '尚杜',
+      seiKana: 'スワ', meiKana: 'ナオト',
+      mail: 'suwa.naoto@logipoke.co.jp',
+      empType: '正社員',
+      gender: '男性',
+      birth: '1985/04/12',
+      join: '2018/04/01',
+      phoneOffice: '03-0000-0001',
+      phonePersonal: '090-1234-5678',
+      mfa: 'required',
+      keiAnKan: false,
+      status: 'active',
+      lastLogin: '2026/05/14 09:12',
+      affiliations: [
+        { team: 'コーポレート本部', primary: true, roles: ['GM', 'CXO'] },
+        { team: '人事部', primary: false, roles: ['GM'] },
+      ],
+    },
+    {
+      id: 'U002',
+      loginId: 'demo-admin',
+      empNo: 'A002',
+      sei: '管理', mei: '太郎',
+      seiKana: 'カンリ', meiKana: 'タロウ',
+      mail: 'demo-admin@logipoke.co.jp',
+      empType: '正社員',
+      gender: '男性',
+      birth: '1970/01/01',
+      join: '2015/04/01',
+      phoneOffice: '03-0000-0001',
+      phonePersonal: '090-0000-0001',
+      mfa: 'exempt',
+      keiAnKan: true,
+      status: 'active',
+      lastLogin: '2026/05/13 18:45',
+      affiliations: [
+        { team: 'コーポレート本部', primary: true, roles: ['CXO'] },
+        { team: '監査役', primary: false, roles: ['GM', 'CXO'] },
+      ],
+    },
+    {
+      id: 'U003',
+      loginId: 'jimu.hanako',
+      empNo: 'A003',
+      sei: '事務', mei: '花子',
+      seiKana: 'ジム', meiKana: 'ハナコ',
+      mail: 'jimu.hanako@logipoke.co.jp',
+      empType: '正社員',
+      gender: '女性',
+      birth: '1988/07/22',
+      join: '2019/10/01',
+      phoneOffice: '03-0000-0002',
+      phonePersonal: '090-2345-6789',
+      mfa: 'required',
+      keiAnKan: false,
+      status: 'active',
+      lastLogin: '2026/05/14 08:30',
+      affiliations: [
+        { team: '人事部', primary: true, roles: ['Manager'] },
+      ],
+    },
+    {
+      id: 'U004',
+      loginId: 'jimu.jiro',
+      empNo: 'A004',
+      sei: '事務', mei: '次郎',
+      seiKana: 'ジム', meiKana: 'ジロウ',
+      mail: 'jimu.jiro@logipoke.co.jp',
+      empType: '正社員',
+      gender: '男性',
+      birth: '1992/03/15',
+      join: '2020/04/01',
+      phoneOffice: '03-0000-0003',
+      phonePersonal: '090-3456-7890',
+      mfa: 'required',
+      keiAnKan: false,
+      status: 'active',
+      lastLogin: '2026/05/13 17:20',
+      affiliations: [
+        { team: '人事部', primary: true, roles: ['Leader'] },
+      ],
+    },
+    {
+      id: 'U005',
+      loginId: 'yamada.kenichi',
+      empNo: 'M001',
+      sei: '山田', mei: '健一',
+      seiKana: 'ヤマダ', meiKana: 'ケンイチ',
+      mail: 'yamada@logipoke.co.jp',
+      empType: '正社員',
+      gender: '男性',
+      birth: '1980/09/03',
+      join: '2017/04/01',
+      phoneOffice: '03-0000-0004',
+      phonePersonal: '090-4567-8901',
+      mfa: 'required',
+      keiAnKan: true,
+      status: 'active',
+      lastLogin: '2026/05/14 09:45',
+      affiliations: [
+        { team: 'M&A事業本部', primary: true, roles: ['GM', 'Manager'] },
+      ],
+    },
+    {
+      id: 'U006',
+      loginId: 'sato.daisuke',
+      empNo: 'M002',
+      sei: '佐藤', mei: '大輔',
+      seiKana: 'サトウ', meiKana: 'ダイスケ',
+      mail: 'sato@logipoke.co.jp',
+      empType: '正社員',
+      gender: '男性',
+      birth: '1990/11/28',
+      join: '2021/04/01',
+      phoneOffice: '03-0000-0005',
+      phonePersonal: '090-5678-9012',
+      mfa: 'required',
+      keiAnKan: false,
+      status: 'active',
+      lastLogin: '2026/05/14 10:02',
+      affiliations: [
+        { team: 'M&A事業本部', primary: true, roles: ['Manager'] },
+      ],
+    },
+    {
+      id: 'U007',
+      loginId: 'suzuki.sho',
+      empNo: 'D001',
+      sei: '鈴木', mei: '翔',
+      seiKana: 'スズキ', meiKana: 'ショウ',
+      mail: 'suzuki@logipoke.co.jp',
+      empType: '正社員',
+      gender: '男性',
+      birth: '1995/02/14',
+      join: '2022/04/01',
+      phoneOffice: '03-0000-0006',
+      phonePersonal: '090-6789-0123',
+      mfa: 'required',
+      keiAnKan: false,
+      status: 'active',
+      lastLogin: '2026/05/14 09:30',
+      affiliations: [
+        { team: '開発本部 / プロダクト開発部', primary: true, roles: ['Sub Manager'] },
+      ],
+    },
+    {
+      id: 'U008',
+      loginId: 'takahashi.akira',
+      empNo: 'D002',
+      sei: '高橋', mei: '明',
+      seiKana: 'タカハシ', meiKana: 'アキラ',
+      mail: 'takahashi@logipoke.co.jp',
+      empType: '正社員',
+      gender: '男性',
+      birth: '1987/06/08',
+      join: '2018/10/01',
+      phoneOffice: '03-0000-0007',
+      phonePersonal: '090-7890-1234',
+      mfa: 'required',
+      keiAnKan: false,
+      status: 'active',
+      lastLogin: '2026/05/14 08:55',
+      affiliations: [
+        { team: '開発本部', primary: true, roles: ['GM'] },
+        { team: '開発本部 / インフラ部', primary: false, roles: ['Manager'] },
+      ],
+    },
+    {
+      id: 'U009',
+      loginId: 'tanaka.ryosuke',
+      empNo: 'P001',
+      sei: '田中', mei: '涼介',
+      seiKana: 'タナカ', meiKana: 'リョウスケ',
+      mail: 'tanaka@logipoke.co.jp',
+      empType: 'パート・アルバイト',
+      gender: '男性',
+      birth: '1998/12/01',
+      join: '2024/01/15',
+      phoneOffice: '',
+      phonePersonal: '090-8901-2345',
+      mfa: 'required',
+      keiAnKan: false,
+      status: 'active',
+      lastLogin: '2026/05/12 14:22',
+      affiliations: [
+        { team: '営業本部 / 関東支社', primary: true, roles: ['Member'] },
+      ],
+    },
+    {
+      id: 'U010',
+      loginId: 'ito.naoki',
+      empNo: 'S001',
+      sei: '伊藤', mei: '直樹',
+      seiKana: 'イトウ', meiKana: 'ナオキ',
+      mail: 'ito@logipoke.co.jp',
+      empType: '正社員',
+      gender: '男性',
+      birth: '1983/05/19',
+      join: '2016/04/01',
+      phoneOffice: '03-0000-0008',
+      phonePersonal: '090-9012-3456',
+      mfa: 'required',
+      keiAnKan: true,
+      status: 'active',
+      lastLogin: '2026/05/14 09:10',
+      affiliations: [
+        { team: '営業本部', primary: true, roles: ['GM'] },
+        { team: '営業本部 / 関西支社', primary: false, roles: ['Manager'] },
+      ],
+    },
+    {
+      id: 'U011',
+      loginId: 'watanabe.yuji',
+      empNo: 'S002',
+      sei: '渡辺', mei: '裕二',
+      seiKana: 'ワタナベ', meiKana: 'ユウジ',
+      mail: 'watanabe@logipoke.co.jp',
+      empType: '契約社員',
+      gender: '男性',
+      birth: '1991/08/30',
+      join: '2023/07/01',
+      phoneOffice: '03-0000-0009',
+      phonePersonal: '090-0123-4567',
+      mfa: 'exempt',
+      keiAnKan: false,
+      status: 'inactive',
+      lastLogin: '2026/03/20 11:00',
+      affiliations: [
+        { team: '営業本部 / 関東支社', primary: true, roles: ['Sub Leader'] },
+      ],
+    },
+    {
+      id: 'U012',
+      loginId: 'nakamura.misaki',
+      empNo: 'S003',
+      sei: '中村', mei: '美咲',
+      seiKana: 'ナカムラ', meiKana: 'ミサキ',
+      mail: 'nakamura@logipoke.co.jp',
+      empType: '正社員',
+      gender: '女性',
+      birth: '1993/10/05',
+      join: '2020/04/01',
+      phoneOffice: '03-0000-0010',
+      phonePersonal: '090-1357-2468',
+      mfa: 'required',
+      keiAnKan: false,
+      status: 'active',
+      lastLogin: '2026/05/14 08:45',
+      affiliations: [
+        { team: '営業本部 / 関西支社', primary: true, roles: ['Leader'] },
+      ],
+    },
+  ];
+
+  let currentUserId = null;
+  let editingAffiliations = []; // 編集中の所属(モーダル内で操作)
+
+  /* ═══════════════════════════════════════════════════════════════
+     ユーティリティ
+     ═══════════════════════════════════════════════════════════════ */
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function getUser(id) { return USERS.find(u => u.id === id); }
+  function fullName(u) { return `${u.sei} ${u.mei}`; }
+  function primaryAffil(u) { return u.affiliations.find(a => a.primary) || u.affiliations[0]; }
+
+  /* ═══════════════════════════════════════════════════════════════
+     一覧テーブル レンダリング & フィルター
+     ═══════════════════════════════════════════════════════════════ */
+  function renderUserTable() {
+    const kw = (document.getElementById('fKeyword').value || '').toLowerCase();
+    const fTeam = document.getElementById('fTeam').value;
+    const fRole = document.getElementById('fRole').value;
+    const fStatus = document.getElementById('fStatus').value;
+    const fMfa = document.getElementById('fMfa').value;
+    const fEmpType = document.getElementById('fEmpType').value;
+    const fKei = document.getElementById('fKei').value;
+
+    const filtered = USERS.filter(u => {
+      if (kw) {
+        const hay = `${u.loginId} ${u.mail} ${u.sei}${u.mei} ${u.seiKana}${u.meiKana} ${u.empNo}`.toLowerCase();
+        if (!hay.includes(kw)) return false;
+      }
+      if (fTeam && !u.affiliations.some(a => a.team === fTeam)) return false;
+      if (fRole && !u.affiliations.some(a => a.roles.includes(fRole))) return false;
+      if (fStatus && u.status !== fStatus) return false;
+      if (fMfa && u.mfa !== fMfa) return false;
+      if (fEmpType && u.empType !== fEmpType) return false;
+      if (fKei === 'on' && !u.keiAnKan) return false;
+      if (fKei === 'off' && u.keiAnKan) return false;
+      return true;
+    });
+
+    const tbody = document.getElementById('userTableBody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#888; padding:40px 16px;">該当するユーザーが見つかりませんでした</td></tr>`;
+    } else {
+      tbody.innerHTML = filtered.map(u => {
+        const pa = primaryAffil(u);
+        const primaryRoles = pa ? pa.roles : [];
+        const firstRole = primaryRoles[0] || '';
+        const extraRoles = primaryRoles.length - 1;
+        const mfaPill = u.mfa === 'required'
+          ? '<span class="mfa-pill required">必須</span>'
+          : '<span class="mfa-pill exempt">免除</span>';
+        const keiCell = u.keiAnKan
+          ? '<span class="kei-pill">対象</span>'
+          : '<span class="status-dash">—</span>';
+        const statusPill = u.status === 'active'
+          ? '<span class="status-pill active">有効</span>'
+          : '<span class="status-pill inactive">無効化</span>';
+
+        return `
+          <tr onclick="showDetail('${u.id}')">
+            <td class="col-emp-no">${esc(u.loginId)}</td>
+            <td>${esc(fullName(u))}</td>
+            <td>${pa ? esc(pa.team) : '<span class="status-dash">—</span>'}</td>
+            <td>${esc(u.empType)}</td>
+            <td>
+              ${firstRole ? `<span class="role-tag role-tag-blue">${esc(firstRole)}</span>` : '<span class="status-dash">—</span>'}
+              ${extraRoles > 0 ? `<span class="role-plus">+${extraRoles}</span>` : ''}
+            </td>
+            <td style="text-align:center;">${keiCell}</td>
+            <td style="text-align:center;">${mfaPill}</td>
+            <td>${statusPill}</td>
+            <td style="text-align:center;">
+              <button class="btn-row-edit" onclick="event.stopPropagation(); openEditModal('${u.id}')">
+                <i class="ti ti-pencil"></i>編集
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('totalCount').textContent = filtered.length;
+    document.getElementById('showCount').textContent = filtered.length > 0 ? `1〜${filtered.length}` : '0';
+  }
+
+  function filterUsers() { renderUserTable(); }
+  function resetFilters() {
+    document.getElementById('fKeyword').value = '';
+    document.getElementById('fTeam').value = '';
+    document.getElementById('fRole').value = '';
+    document.getElementById('fStatus').value = 'active';
+    document.getElementById('fMfa').value = '';
+    document.getElementById('fEmpType').value = '';
+    document.getElementById('fKei').value = '';
+    renderUserTable();
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     ビュー切替（一覧 ⇔ 詳細）
+     ═══════════════════════════════════════════════════════════════ */
+  function showList() {
+    document.getElementById('viewList').classList.add('active');
+    document.getElementById('viewDetail').classList.remove('active');
+    document.getElementById('bcCurrent').textContent = 'ユーザー管理';
+    document.querySelector('.breadcrumb').innerHTML = `
+      <a href="#" onclick="goToList(event)">共通管理</a>
+      <i class="ti ti-chevron-right"></i>
+      <span class="current">ユーザー管理</span>
+    `;
+    window.scrollTo(0, 0);
+    const main = document.querySelector('.main');
+    if (main) main.scrollTop = 0;
+  }
+
+  function showDetail(userId) {
+    const u = getUser(userId);
+    if (!u) return;
+    currentUserId = userId;
+
+    document.getElementById('viewList').classList.remove('active');
+    document.getElementById('viewDetail').classList.add('active');
+
+    // breadcrumb
+    document.querySelector('.breadcrumb').innerHTML = `
+      <a href="#" onclick="goToList(event)">共通管理</a>
+      <i class="ti ti-chevron-right"></i>
+      <a href="#" onclick="goToList(event)">ユーザー管理</a>
+      <i class="ti ti-chevron-right"></i>
+      <span class="current">${esc(fullName(u))}</span>
+    `;
+
+    // header
+    document.getElementById('dName').textContent = fullName(u);
+    document.getElementById('dLoginId').textContent = u.loginId;
+    const sb = document.getElementById('dStatusBadge');
+    if (u.status === 'active') { sb.textContent = '有効'; sb.className = 'detail-badge green'; }
+    else { sb.textContent = '無効化'; sb.className = 'detail-badge outline'; sb.style.color = '#d9352e'; sb.style.borderColor = '#f4cdc9'; sb.style.background = '#fdeeec'; }
+
+    const pa = primaryAffil(u);
+    const rb1 = document.getElementById('dRoleBadge1');
+    const rb2 = document.getElementById('dRoleBadge2');
+    if (pa) {
+      rb1.textContent = `${pa.team}`;
+      rb1.style.display = '';
+      if (pa.roles.length > 0) {
+        rb2.textContent = pa.roles.join(' / ');
+        rb2.style.display = '';
+      } else { rb2.style.display = 'none'; }
+    } else { rb1.style.display = 'none'; rb2.style.display = 'none'; }
+    document.getElementById('dMfaBadge').textContent = `MFA: ${u.mfa === 'required' ? '必須' : '免除'}`;
+
+    // 軽安管バッジ
+    const kb = document.getElementById('dKeiBadge');
+    if (u.keiAnKan) { kb.style.display = ''; }
+    else { kb.style.display = 'none'; }
+
+    // deactivate / activate button
+    const db = document.getElementById('dDeactivateBtn');
+    if (u.status === 'active') {
+      db.textContent = '無効化';
+      db.className = 'btn-danger-outline';
+    } else {
+      db.textContent = '有効化';
+      db.className = 'btn-secondary';
+    }
+
+    // アカウント情報
+    document.getElementById('fAccLoginId').textContent = u.loginId;
+    document.getElementById('fAccMail').textContent = u.mail;
+    document.getElementById('fAccRole').textContent = pa ? `${pa.team} / ${pa.roles.join(', ')}` : '—';
+    document.getElementById('fAccMfa').textContent = u.mfa === 'required' ? '必須' : '免除';
+    document.getElementById('fAccStatus').textContent = u.status === 'active' ? '有効' : '無効化';
+    document.getElementById('fAccLastLogin').textContent = u.lastLogin || '—';
+
+    // 従業員情報
+    document.getElementById('fEmpTeam').textContent = pa ? pa.team : '—';
+    document.getElementById('fEmpNo').textContent = u.empNo;
+    document.getElementById('fEmpType').textContent = u.empType;
+    document.getElementById('fEmpSei').textContent = u.sei;
+    document.getElementById('fEmpMei').textContent = u.mei;
+    document.getElementById('fEmpSeiKana').textContent = u.seiKana;
+    document.getElementById('fEmpMeiKana').textContent = u.meiKana;
+    document.getElementById('fEmpGender').textContent = u.gender || '未選択';
+    document.getElementById('fEmpBirth').textContent = u.birth || '—';
+    document.getElementById('fEmpJoin').textContent = u.join || '—';
+    document.getElementById('fEmpPhoneOffice').textContent = u.phoneOffice || '—';
+    document.getElementById('fEmpPhonePersonal').textContent = u.phonePersonal || '—';
+    const fk = document.getElementById('fEmpKei');
+    if (u.keiAnKan) { fk.innerHTML = '<span class="kei-pill">対象</span>'; }
+    else { fk.innerHTML = '<span style="color:#b5b5b5;">対象外</span>'; }
+
+    // 所属一覧
+    renderAffilDetailList();
+
+    // タブを基本情報に戻す
+    switchTab('basic');
+
+    // スクロール先頭へ
+    window.scrollTo(0, 0);
+    const main = document.querySelector('.main');
+    if (main) main.scrollTop = 0;
+  }
+
+  function goToList(e) { if (e) e.preventDefault(); showList(); }
+
+  function switchTab(tabId) {
+    document.querySelectorAll('.detail-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabId));
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     所属タブ：所属一覧の描画
+     ═══════════════════════════════════════════════════════════════ */
+  function renderAffilDetailList() {
+    const u = getUser(currentUserId);
+    if (!u) return;
+    const wrap = document.getElementById('affilDetailList');
+    if (u.affiliations.length === 0) {
+      wrap.innerHTML = `<div style="padding: 36px 20px; text-align: center; color: #888;">所属チームが設定されていません</div>`;
+      return;
+    }
+    wrap.innerHTML = u.affiliations.map(a => `
+      <div class="affil-row">
+        <div class="affil-row-left">
+          <div class="affil-team-name">
+            ${esc(a.team)}
+            ${a.primary ? '<span class="primary-mark">主務</span>' : ''}
+          </div>
+          <div class="affil-role-row">
+            ${a.roles.length === 0
+              ? '<span class="role-tag" style="color:#b5b5b5; font-style:italic;">役職なし</span>'
+              : a.roles.map(r => `<span class="role-tag${a.primary ? ' role-tag-primary' : ''}">${esc(r)}</span>`).join('')
+            }
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     モーダル：開閉
+     ═══════════════════════════════════════════════════════════════ */
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+    // open hooks
+    if (id === 'modalEditBasic') prefillBasicForm();
+    if (id === 'modalDeactivate') prefillDeactivate();
+    if (id === 'modalResetPw') prefillResetPw();
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+  // backdrop click closes
+  document.querySelectorAll('.modal-backdrop').forEach(bd => {
+    bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); });
+  });
+
+  /* ═══════════════════════════════════════════════════════════════
+     編集モーダル：軽安管 + 所属チーム・役職
+     ═══════════════════════════════════════════════════════════════ */
+  let editingKeiAnKan = false;
+
+  function openEditModal(userId) {
+    currentUserId = userId;
+    const u = getUser(userId);
+    if (!u) return;
+
+    // ユーザーカードを描画
+    const initial = (u.sei || '?').slice(0, 1);
+    document.getElementById('editAvatar').textContent = initial;
+    document.getElementById('editUserName').textContent = fullName(u);
+    document.getElementById('editUserMeta').textContent = `ログインID: ${u.loginId} / 社員番号: ${u.empNo}`;
+
+    // 軽安管トグル
+    editingKeiAnKan = !!u.keiAnKan;
+    document.getElementById('editKei').checked = editingKeiAnKan;
+    document.getElementById('keiSection').classList.toggle('is-on', editingKeiAnKan);
+
+    // 編集中状態(deep copy)
+    editingAffiliations = u.affiliations.map(a => ({ team: a.team, primary: a.primary, roles: [...a.roles] }));
+    renderTeamBlocks();
+    openModal('modalEditAffil');
+  }
+
+  function onKeiToggle() {
+    editingKeiAnKan = document.getElementById('editKei').checked;
+    document.getElementById('keiSection').classList.toggle('is-on', editingKeiAnKan);
+  }
+
+  // 詳細画面からの呼び出し
+  function openEditModalForCurrent() {
+    if (currentUserId) openEditModal(currentUserId);
+  }
+
+  function renderTeamBlocks() {
+    const wrap = document.getElementById('teamBlocks');
+    if (editingAffiliations.length === 0) {
+      wrap.innerHTML = `<div style="text-align:center; color:#888; padding:24px; background:#fafafa; border:1px dashed #d5d5d5; border-radius:8px; margin-bottom:8px;">所属チームがありません。下の「所属チームを追加」から追加してください。</div>`;
+      return;
+    }
+    // 主務が0件なら最初の1件をデフォルトで主務に
+    if (!editingAffiliations.some(a => a.primary)) {
+      editingAffiliations[0].primary = true;
+    }
+    wrap.innerHTML = editingAffiliations.map((a, idx) => `
+      <div class="team-block ${a.primary ? 'is-primary' : ''}" data-idx="${idx}">
+        <div class="team-block-head">
+          <input type="radio" name="primaryTeam" class="primary-radio" ${a.primary ? 'checked' : ''} onchange="setPrimaryTeam(${idx})">
+          <div class="team-block-name">
+            ${esc(a.team)}
+            ${a.primary ? '<span class="primary-flag" style="margin-left:6px;">主務</span>' : ''}
+          </div>
+          <button class="team-remove-btn" onclick="removeTeamBlock(${idx})" title="このチームを削除"><i class="ti ti-trash"></i></button>
+        </div>
+
+        <label class="form-label" style="font-size:12px; margin-bottom:5px;">役職（複数選択可）</label>
+        <div class="role-dropdown" id="roleDd-${idx}">
+          <div class="role-chip-area" onclick="toggleRoleDropdown(${idx}, event)">
+            ${a.roles.map(r => `
+              <span class="role-chip">
+                ${esc(r)}
+                <button class="role-chip-x" onclick="event.stopPropagation(); removeRole(${idx}, '${esc(r)}')">×</button>
+              </span>
+            `).join('')}
+            <span style="font-size:12px; color:#b5b5b5; padding:3px 4px;">${a.roles.length === 0 ? '役職を追加...' : ''}</span>
+          </div>
+          <div class="role-dropdown-menu">
+            ${ROLES.map(r => `
+              <div class="role-dropdown-item ${a.roles.includes(r) ? 'selected' : ''}" onclick="toggleRole(${idx}, '${esc(r)}')">${esc(r)}</div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function setPrimaryTeam(idx) {
+    editingAffiliations.forEach((a, i) => a.primary = (i === idx));
+    renderTeamBlocks();
+  }
+  function removeTeamBlock(idx) {
+    editingAffiliations.splice(idx, 1);
+    if (editingAffiliations.length > 0 && !editingAffiliations.some(a => a.primary)) {
+      editingAffiliations[0].primary = true;
+    }
+    renderTeamBlocks();
+  }
+  function toggleRoleDropdown(idx, e) {
+    e.stopPropagation();
+    const dd = document.getElementById(`roleDd-${idx}`);
+    const wasOpen = dd.classList.contains('open');
+    document.querySelectorAll('.role-dropdown.open').forEach(d => d.classList.remove('open'));
+    if (!wasOpen) dd.classList.add('open');
+  }
+  function toggleRole(idx, role) {
+    const a = editingAffiliations[idx];
+    const i = a.roles.indexOf(role);
+    if (i >= 0) a.roles.splice(i, 1);
+    else a.roles.push(role);
+    // role順をROLES定義順にソート
+    a.roles.sort((x, y) => ROLES.indexOf(x) - ROLES.indexOf(y));
+    renderTeamBlocks();
+    // ドロップダウン開いたまま
+    setTimeout(() => { const dd = document.getElementById(`roleDd-${idx}`); if (dd) dd.classList.add('open'); }, 0);
+  }
+  function removeRole(idx, role) {
+    const a = editingAffiliations[idx];
+    const i = a.roles.indexOf(role);
+    if (i >= 0) a.roles.splice(i, 1);
+    renderTeamBlocks();
+  }
+  function addTeamBlock() {
+    // 既に追加済みチームを除外
+    const used = new Set(editingAffiliations.map(a => a.team));
+    const available = TEAMS.filter(t => !used.has(t));
+    if (available.length === 0) {
+      showToast('追加できるチームがありません', 'error');
+      return;
+    }
+    // シンプルにプロンプトはやめて、最初の利用可能チームを追加 → 編集できるよう、ドロップダウン式に
+    // ここではドロップダウンUI を簡易に：最初の available を追加（実運用では選択UI）
+    openAddTeamPicker(available);
+  }
+
+  // チーム追加：簡易ピッカー（モーダル内モーダルではなく上書きする）
+  function openAddTeamPicker(available) {
+    // 既存のtempPickerを削除
+    const old = document.getElementById('addTeamPicker');
+    if (old) old.remove();
+    const picker = document.createElement('div');
+    picker.id = 'addTeamPicker';
+    picker.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; display:flex; align-items:flex-start; justify-content:center; padding:80px 20px;';
+    picker.innerHTML = `
+      <div style="background:#fff; border-radius:8px; width:100%; max-width:420px; box-shadow:0 12px 40px rgba(0,0,0,0.25);">
+        <div style="padding:16px 20px; border-bottom:1px solid #ebebeb; display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-size:15px; font-weight:700;">所属チームを選択</div>
+          <button onclick="document.getElementById('addTeamPicker').remove()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#888;">✕</button>
+        </div>
+        <div style="padding:8px 0; max-height:360px; overflow-y:auto;">
+          ${available.map(t => `
+            <div class="picker-team" data-team="${esc(t)}" style="padding:11px 20px; font-size:13px; cursor:pointer; transition:background 0.1s;">
+              <i class="ti ti-users-group" style="margin-right:8px; color:#2e7d5a;"></i>${esc(t)}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(picker);
+    picker.querySelectorAll('.picker-team').forEach(item => {
+      item.addEventListener('mouseenter', () => item.style.background = '#f5f5f2');
+      item.addEventListener('mouseleave', () => item.style.background = '');
+      item.addEventListener('click', () => {
+        const team = item.dataset.team;
+        editingAffiliations.push({ team, primary: editingAffiliations.length === 0, roles: [] });
+        picker.remove();
+        renderTeamBlocks();
+      });
+    });
+    picker.addEventListener('click', e => { if (e.target === picker) picker.remove(); });
+  }
+
+  function saveAffil() {
+    const u = getUser(currentUserId);
+    if (!u) return;
+    // 検証：少なくとも1チーム
+    if (editingAffiliations.length === 0) {
+      showToast('少なくとも1つのチームを設定してください', 'error');
+      return;
+    }
+    // 検証：主務が1つ
+    const primaryCount = editingAffiliations.filter(a => a.primary).length;
+    if (primaryCount !== 1) {
+      showToast('主務のチームを1つ選択してください', 'error');
+      return;
+    }
+    u.affiliations = editingAffiliations.map(a => ({ team: a.team, primary: a.primary, roles: [...a.roles] }));
+    u.keiAnKan = editingKeiAnKan;
+    closeModal('modalEditAffil');
+    renderUserTable();
+    // 詳細画面が表示されているなら再描画
+    if (document.getElementById('viewDetail').classList.contains('active') && currentUserId === u.id) {
+      showDetail(u.id);
+    }
+    showToast('ユーザー設定を更新しました');
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     編集モーダル：基本情報
+     ═══════════════════════════════════════════════════════════════ */
+  function prefillBasicForm() {
+    const u = getUser(currentUserId);
+    if (!u) return;
+    document.getElementById('eEmpNo').value = u.empNo;
+    document.getElementById('eEmpType').value = u.empType;
+    document.getElementById('eMail').value = u.mail;
+    document.getElementById('eSei').value = u.sei;
+    document.getElementById('eMei').value = u.mei;
+    document.getElementById('eSeiKana').value = u.seiKana;
+    document.getElementById('eMeiKana').value = u.meiKana;
+    document.getElementById('eGender').value = u.gender || '未選択';
+    document.getElementById('eBirth').value = (u.birth || '').replace(/\//g, '-');
+    document.getElementById('eJoin').value = (u.join || '').replace(/\//g, '-');
+    document.getElementById('ePhoneOffice').value = u.phoneOffice || '';
+    document.getElementById('ePhonePersonal').value = u.phonePersonal || '';
+  }
+  function saveBasic() {
+    const u = getUser(currentUserId);
+    if (!u) return;
+    u.empNo = document.getElementById('eEmpNo').value.trim();
+    u.empType = document.getElementById('eEmpType').value;
+    u.mail = document.getElementById('eMail').value.trim();
+    u.sei = document.getElementById('eSei').value.trim();
+    u.mei = document.getElementById('eMei').value.trim();
+    u.seiKana = document.getElementById('eSeiKana').value.trim();
+    u.meiKana = document.getElementById('eMeiKana').value.trim();
+    u.gender = document.getElementById('eGender').value;
+    u.birth = (document.getElementById('eBirth').value || '').replace(/-/g, '/');
+    u.join = (document.getElementById('eJoin').value || '').replace(/-/g, '/');
+    u.phoneOffice = document.getElementById('ePhoneOffice').value.trim();
+    u.phonePersonal = document.getElementById('ePhonePersonal').value.trim();
+    closeModal('modalEditBasic');
+    showDetail(u.id);
+    renderUserTable();
+    showToast('従業員情報を更新しました');
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     無効化 / 有効化 / パスワードリセット
+     ═══════════════════════════════════════════════════════════════ */
+  function prefillDeactivate() {
+    const u = getUser(currentUserId);
+    if (!u) return;
+    const isActive = u.status === 'active';
+    document.getElementById('deactivateTitle').textContent = isActive ? 'ユーザーを無効化' : 'ユーザーを有効化';
+    document.getElementById('deactivateConfirm').textContent = isActive ? '無効化する' : '有効化する';
+    document.getElementById('deactivateConfirm').className = isActive ? 'btn-modal-danger' : 'btn-modal-primary';
+    const alert = document.getElementById('deactivateAlert');
+    if (isActive) {
+      alert.className = 'alert-danger';
+      alert.innerHTML = `<i class="ti ti-alert-triangle"></i><div>このユーザーは <strong>ログイン不可</strong> になります。連携サービスへのアクセスもブロックされます。</div>`;
+    } else {
+      alert.className = 'alert-warn';
+      alert.innerHTML = `<i class="ti ti-info-circle"></i><div>このユーザーは再びログインできるようになります。</div>`;
+    }
+    document.getElementById('deactivateName').textContent = fullName(u);
+    document.getElementById('deactivateMeta').textContent = `ログインID: ${u.loginId} / メール: ${u.mail}`;
+  }
+  function toggleDeactivate() {
+    const u = getUser(currentUserId);
+    if (!u) return;
+    const wasActive = u.status === 'active';
+    u.status = wasActive ? 'inactive' : 'active';
+    closeModal('modalDeactivate');
+    showDetail(u.id);
+    renderUserTable();
+    showToast(wasActive ? 'ユーザーを無効化しました' : 'ユーザーを有効化しました');
+  }
+  function prefillResetPw() {
+    const u = getUser(currentUserId);
+    if (!u) return;
+    document.getElementById('resetName').textContent = fullName(u);
+    document.getElementById('resetMeta').textContent = `ログインID: ${u.loginId} / メール: ${u.mail}`;
+  }
+  function resetPassword() {
+    closeModal('modalResetPw');
+    showToast('パスワード再設定リンクをメール送信しました');
+  }
+  function createUser() {
+    closeModal('modalCreate');
+    showToast('ユーザーを登録し、招待メールを送信しました');
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     CSV インポート
+     ═══════════════════════════════════════════════════════════════ */
+  function openImportModal() {
+    document.getElementById('fileInput').value = '';
+    document.getElementById('dropzoneFile').innerHTML = '';
+    document.getElementById('uploadBtn').disabled = true;
+    document.getElementById('charsetCheck').checked = false;
+    openModal('modalImport');
+  }
+  function handleFile(e) {
+    const file = e.target.files[0];
+    if (file) setSelectedFile(file);
+  }
+  function setSelectedFile(file) {
+    document.getElementById('dropzoneFile').innerHTML =
+      `<div class="dropzone-file"><i class="ti ti-file-check"></i>${esc(file.name)} (${(file.size/1024).toFixed(1)} KB)</div>`;
+    document.getElementById('uploadBtn').disabled = false;
+  }
+  function downloadSample() {
+    showToast('ユーザーのサンプルCSVをダウンロードしました');
+  }
+  function submitImport() {
+    closeModal('modalImport');
+    runProgress({
+      title: 'CSVをインポート中',
+      steps: ['ファイルを検証中...', 'ユーザーデータを取り込み中...', '組織情報を反映中...', '完了処理中...'],
+      completeTitle: 'CSVインポートが完了しました',
+      completeDetail: '12件のユーザーを取り込みました',
+      toast: 'CSVインポートが完了しました',
+      duration: 3200,
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     CSV エクスポート
+     ═══════════════════════════════════════════════════════════════ */
+  function openExportModal() {
+    document.getElementById('exportCharset').value = 'utf8bom';
+    openModal('modalExport');
+  }
+  function submitExport() {
+    closeModal('modalExport');
+    runProgress({
+      title: 'CSVを生成中',
+      steps: ['データを取得中...', 'CSVに変換中...', 'ダウンロード準備中...'],
+      completeTitle: 'CSVダウンロードが完了しました',
+      completeDetail: 'users_20260514.csv',
+      toast: 'CSVダウンロードが完了しました',
+      duration: 2400,
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     プログレスバー (右下フローティング)
+     ═══════════════════════════════════════════════════════════════ */
+  let progressTimer = null;
+
+  function runProgress({ title, steps, completeTitle, completeDetail, toast, duration }) {
+    const card = document.getElementById('progressCard');
+    const fill = document.getElementById('progressFill');
+    const pctEl = document.getElementById('progressPercent');
+    const titleEl = document.getElementById('progressTitle');
+    const detailEl = document.getElementById('progressDetail');
+
+    // 既存タイマーをキャンセル
+    if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+
+    card.classList.remove('is-complete');
+    card.classList.add('open');
+    titleEl.textContent = title;
+    detailEl.textContent = steps[0];
+    fill.style.width = '0%';
+    pctEl.textContent = '0%';
+
+    const startTime = Date.now();
+    progressTimer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      let pct = Math.min((elapsed / duration) * 100, 100);
+      // 終盤を少しゆっくり
+      if (pct > 90) pct = 90 + (pct - 90) * 0.6;
+      fill.style.width = pct + '%';
+      pctEl.textContent = Math.floor(pct) + '%';
+      // ステップ更新
+      const stepIdx = Math.min(Math.floor((pct / 100) * steps.length), steps.length - 1);
+      detailEl.textContent = steps[stepIdx];
+
+      if (elapsed >= duration) {
+        clearInterval(progressTimer);
+        progressTimer = null;
+        // 完了状態
+        fill.style.width = '100%';
+        pctEl.textContent = '100%';
+        card.classList.add('is-complete');
+        titleEl.textContent = completeTitle;
+        detailEl.textContent = completeDetail || '完了しました';
+        // 2.4秒後に消える
+        setTimeout(() => {
+          card.classList.remove('open');
+          if (toast) showToast(toast);
+        }, 2400);
+      }
+    }, 80);
+  }
+
+  // ドラッグ＆ドロップ（CSVインポート）
+  (function initDropzone() {
+    const dz = document.getElementById('dropzone');
+    if (!dz) return;
+    ['dragenter', 'dragover'].forEach(ev => {
+      dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(ev => {
+      dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover'); });
+    });
+    dz.addEventListener('drop', e => {
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        document.getElementById('fileInput').files = e.dataTransfer.files;
+        setSelectedFile(file);
+      }
+    });
+  })();
+
+  /* ═══════════════════════════════════════════════════════════════
+     TOAST
+     ═══════════════════════════════════════════════════════════════ */
+  let toastTimer;
+  function showToast(message, type) {
+    const t = document.getElementById('toast');
+    const icon = type === 'error'
+      ? '<i class="ti ti-alert-circle" style="color:#ff8a80;"></i>'
+      : '<i class="ti ti-check" style="color:#80e27e;"></i>';
+    t.innerHTML = icon + '<span>' + esc(message) + '</span>';
+    t.style.background = type === 'error' ? '#5d1f1f' : '#1a3028';
+    t.style.display = 'flex';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.style.display = 'none'; }, 2800);
+  }
+
+  // ドキュメントクリックでrole dropdownを閉じる
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.role-dropdown')) {
+      document.querySelectorAll('.role-dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+  });
+
+  // 初期描画
+  renderUserTable();
+</script>
+
+</body>
+</html>
